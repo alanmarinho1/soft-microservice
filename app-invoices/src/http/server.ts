@@ -1,4 +1,6 @@
-import '../broker/subscriber.ts';
+import "@opentelemetry/auto-instrumentations-node/register";
+
+import "../broker/subscriber.ts"; // carregar as mensagens na inicialização da aplicação
 
 import { fastify } from "fastify";
 import { fastifyCors } from "@fastify/cors";

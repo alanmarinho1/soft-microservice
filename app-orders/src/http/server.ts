@@ -1,3 +1,5 @@
+import "@opentelemetry/auto-instrumentations-node/register";
+
 import { fastify } from "fastify";
 import { z } from "zod";
 import { fastifyCors } from "@fastify/cors";
@@ -6,10 +8,12 @@ import {
   validatorCompiler,
   type ZodTypeProvider,
 } from "fastify-type-provider-zod";
-import { channels } from "../broker/channels/index.ts";
 import { db } from "../db/client.ts";
 import { schema } from "../db/schema/indes.ts";
 import { dispathOrderCreated } from "../broker/messages/order-created.ts";
+import { trace } from "@opentelemetry/api";
+import { setTimeout } from "node:timers/promises";
+import { tracer } from "../tracer/tracer.ts";
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
 
@@ -38,20 +42,27 @@ app.post(
 
     console.log("Creating an order with amount", amount);
     const orderId = crypto.randomUUID();
-    dispathOrderCreated({
-        orderId,
-        amount,
-        customerId: {
-            id: '696e81ad-184a-471c-a6b1-ae254186ffb1'
-        }
-    })
 
-    
-    await db.insert(schema.orders).values({ 
-        id: orderId,
-        custumerId: '696e81ad-184a-471c-a6b1-ae254186ffb1',
-        amount,
-     });
+    await db.insert(schema.orders).values({
+      id: orderId,
+      custumerId: "696e81ad-184a-471c-a6b1-ae254186ffb1",
+      amount,
+    });
+
+    const span = tracer.startSpan("Deve está lento nessa parte");
+    span.setAttribute("teste", "Hello World");
+    await setTimeout(3000);
+    span.end();
+
+    trace.getActiveSpan()?.setAttribute("order_id", orderId); // destacar algum atributo no trace
+
+    dispathOrderCreated({
+      orderId,
+      amount,
+      customerId: {
+        id: "696e81ad-184a-471c-a6b1-ae254186ffb1",
+      },
+    });
     return reply.status(201).send({ amount });
   }
 );
