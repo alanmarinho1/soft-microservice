@@ -1,5 +1,5 @@
 services:
-  broker:
+  broker: # Mensageria com RabbitMQ
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
