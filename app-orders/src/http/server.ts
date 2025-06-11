@@ -49,10 +49,10 @@ app.post(
       amount,
     });
 
-    const span = tracer.startSpan("Deve está lento nessa parte");
-    span.setAttribute("teste", "Hello World");
-    await setTimeout(3000);
-    span.end();
+    // const span = tracer.startSpan("Deve está lento nessa parte");
+    // span.setAttribute("teste", "Hello World");
+    // await setTimeout(3000);
+    // span.end();
 
     trace.getActiveSpan()?.setAttribute("order_id", orderId); // destacar algum atributo no trace
 

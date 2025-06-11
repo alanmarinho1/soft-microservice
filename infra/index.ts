@@ -21,6 +21,7 @@ export const ordersDockerImage = new docker.Image("orders-image", {
   context: {
     location: "../app-orders", // local da imagem
   },
+  
   push: true, // fazer o build e jogar no repository
   platforms: ["linux/amd64"],
   registries: [
@@ -32,12 +33,11 @@ export const ordersDockerImage = new docker.Image("orders-image", {
   ], // repository que vai receber a imagem
 });
 
-
 // Deploy no AWS
 // Subir com ECS + Fargate
 // Outras alternativas: EC2 e EKS
 
-const cluster = new awsx.classic.ecs.Cluster("app-cluster")
+const cluster = new awsx.classic.ecs.Cluster("app-cluster");
 
 const ordersService = new awsx.classic.ecs.FargateService("fargate-orders", {
   cluster, // O cluster para onde o serviço tem que está hospedado
@@ -48,6 +48,6 @@ const ordersService = new awsx.classic.ecs.FargateService("fargate-orders", {
       image: ordersDockerImage.ref,
       cpu: 256,
       memory: 512,
-    }
+    },
   },
 });
