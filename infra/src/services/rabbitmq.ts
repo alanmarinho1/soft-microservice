@@ -13,11 +13,28 @@ const rabbitMQAdminTargetGroup = appLoadBalancer.createTargetGroup("rabbitmq-adm
 });
 
 // Este bloco cria um "ouvinte" (listener) que fica esperando conexões na porta 15672. Quando alguém acessa essa porta, ele direciona o acesso para o grupo de destino acima, mostrando o painel do RabbitMQ.
-const rabbitMQAdminHttpListener = appLoadBalancer.createListener("rabbitmq-admin-listener", {
+export const rabbitMQAdminHttpListener = appLoadBalancer.createListener("rabbitmq-admin-listener", {
   port: 15672, 
   protocol: "HTTP",
   targetGroup: rabbitMQAdminTargetGroup,
 });
+
+const amqpTargetGroup = networkLoadBalancer.createTargetGroup("amqp-target", {
+  port: 5672, // Porta padrão do RabbitMQ para AMQP
+  protocol: "TCP",
+  targetType: "ip", // Usando IP como tipo de destino
+  healthCheck: {
+    protocol: "TCP",
+    port: "5672",
+  },
+});
+
+export const amqpListener = networkLoadBalancer.createListener("amqp-listener", {
+  port: 5672, // Porta padrão do RabbitMQ para AMQP
+  protocol: "TCP",
+  targetGroup: amqpTargetGroup,
+});
+  
 
 export const rabbitMQService = new awsx.classic.ecs.FargateService("fargate-rabbitmq", {
   cluster, // O cluster para onde o serviço tem que está hospedado
@@ -28,6 +45,7 @@ export const rabbitMQService = new awsx.classic.ecs.FargateService("fargate-rabb
       image: 'rabbitmq:3-management', // Usando a imagem oficial do RabbitMQ com o plugin de gerenciamento
       portMappings: [
         rabbitMQAdminHttpListener, // Mapeando a porta do painel de administração
+        amqpListener, // Mapeando a porta AMQP para o RabbitMQ
       ],
       environment: [
         {name: 'RABBITMQ_DEFAULT_USER', value: 'admin'},
